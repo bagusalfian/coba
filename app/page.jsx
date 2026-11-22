@@ -207,7 +207,7 @@ export default function Home() {
       <main className="app">
         <header className="header">
           <h1>
-            To Do List <span>Harian</span>
+            List Harian <span>Naila Khoirunnisa</span>
           </h1>
           <p className="tagline">Satu hari, satu daftar, semua beres.</p>
         </header>
@@ -220,7 +220,7 @@ export default function Home() {
     <main className="app">
       <header className="header">
         <h1>
-          To Do List <span>Harian</span>
+          List Harian <span>Naila Khoirunnisa</span>
         </h1>
         <p className="tagline">Satu hari, satu daftar, semua beres.</p>
       </header>
