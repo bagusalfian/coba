@@ -130,6 +130,19 @@ textarea {
   cursor: pointer;
 }
 
+.btn-test {
+  margin-top: 10px;
+  margin-left: 8px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--orange);
+  background: transparent;
+  color: var(--orange);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
 .reminder-status {
   margin: 12px 0 0;
   color: var(--orange);

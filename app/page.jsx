@@ -91,6 +91,7 @@ export default function Home() {
     typeof Notification !== 'undefined' ? Notification.permission : 'unsupported',
   );
   const [reminderSent, setReminderSent] = useState(false);
+  const [testResult, setTestResult] = useState('');
   const titleRef = useRef(null);
 
   // Muat dari localStorage hanya di client, setelah mount — ini yang
@@ -124,6 +125,38 @@ export default function Home() {
       const result = await Notification.requestPermission();
       setNotifPermission(result);
     } catch {}
+  }
+
+  // Tombol tes: langsung kirim notifikasi sekarang, supaya ketahuan
+  // izinnya jalan atau tidak — tanpa harus menunggu jam 08:00 besok.
+  async function testNotification() {
+    if (typeof Notification === 'undefined') {
+      setTestResult('Browser ini tidak mendukung notifikasi. Buka dari Chrome, jangan dari aplikasi lain.');
+      return;
+    }
+    if (Notification.permission !== 'granted') {
+      setTestResult('Izin notifikasi belum diberikan. Pencet "Aktifkan notifikasi browser" dulu, lalu Izinkan.');
+      return;
+    }
+    try {
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.ready;
+        await reg.showNotification('Tes Pengingat H-1', {
+          body: 'Ini notifikasi tes. Kalau ini muncul di status bar, pengingat H-1 sudah jalan.',
+          icon: '/icon.svg',
+          badge: '/icon.svg',
+          tag: 'tes-h1',
+        });
+        setTestResult('✓ Notifikasi tes dikirim. Cek status bar HP-mu.');
+      } else {
+        new Notification('Tes Pengingat H-1', {
+          body: 'Ini notifikasi tes. Kalau ini muncul di status bar, pengingat H-1 sudah jalan.',
+        });
+        setTestResult('✓ Notifikasi tes dikirim. Cek status bar HP-mu.');
+      }
+    } catch (e) {
+      setTestResult(`Gagal kirim notifikasi tes: ${e && e.message ? e.message : 'tidak diketahui'}. Coba buka dari Chrome, bukan dari WhatsApp.`);
+    }
   }
 
   async function fireH1Notification(tasks, dateKey) {
@@ -192,7 +225,7 @@ export default function Home() {
     checkH1();
     const timer = setInterval(checkH1, 60000);
     return () => clearInterval(timer);
-  }, [mounted, reminderOn, tomorrowTasks, tomorrowKey]);
+  }, [mounted, reminderOn, tomorrowTasks, tomorrowKey, notifPermission]);
 
   const dayTasks = tasksByDate[selectedDate] || [];
   const total = dayTasks.length;
@@ -336,6 +369,12 @@ export default function Home() {
             Aktifkan notifikasi browser
           </button>
         )}
+        {reminderOn && (
+          <button type="button" className="btn-test" onClick={testNotification}>
+            Tes notifikasi sekarang
+          </button>
+        )}
+        {testResult && <p className="reminder-status">{testResult}</p>}
         {reminderOn && notifPermission === 'granted' && (
           <p className="reminder-status">
             {reminderSent
