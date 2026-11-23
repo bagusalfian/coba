@@ -71,6 +71,107 @@ textarea {
   font-size: 15px;
 }
 
+/* ---------- Pengingat H-1 ---------- */
+
+.reminder-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  animation: fadeUp 0.5s ease both;
+}
+
+.reminder-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.reminder-top strong {
+  font-size: 15px;
+}
+
+.reminder-top p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.reminder-toggle {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.reminder-toggle.on {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: #0a0a0a;
+}
+
+.btn-notif {
+  margin-top: 12px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: none;
+  background: var(--orange);
+  color: #0a0a0a;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.reminder-status {
+  margin: 12px 0 0;
+  color: var(--orange);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.reminder-status.warn {
+  color: #ffb020;
+}
+
+.tomorrow-card {
+  background: var(--orange-dim);
+  border: 1px solid var(--orange);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  animation: fadeUp 0.5s ease both;
+}
+
+.tomorrow-card strong {
+  font-size: 15px;
+}
+
+.tomorrow-card ul {
+  margin: 10px 0;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.tomorrow-card button {
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--orange);
+  background: transparent;
+  color: var(--orange);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
 /* ---------- Date navigation ---------- */
 
 .date-nav {

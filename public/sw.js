@@ -1,4 +1,18 @@
-const CACHE = 'todo-harian-v1';
+const CACHE = 'todo-harian-v2';
+
+// Ketuk notifikasi pengingat H-1 -> buka / fokuskan aplikasi.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((list) => {
+        const existing = list.find((c) => c.url.includes(self.registration.scope));
+        if (existing) return existing.focus();
+        return clients.openWindow('/');
+      }),
+  );
+});
 const ASSETS = ['/', '/manifest.webmanifest', '/icon.svg', '/icon-maskable.svg'];
 
 self.addEventListener('install', (event) => {

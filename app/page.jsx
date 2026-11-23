@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 const STORAGE_KEY = 'todo-harian-v1';
+const REMINDER_KEY = 'todo-harian-reminder-v1';
+const NOTIFIED_KEY = 'todo-harian-notified-h1-v1';
+const REMINDER_HOUR = 8; // Pengingat H-1 dikirim jam 08:00
 const PRIORITIES = ['Rendah', 'Sedang', 'Tinggi'];
 
 const DAY_NAMES = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
@@ -83,17 +86,67 @@ export default function Home() {
   const [note, setNote] = useState('');
   const [priority, setPriority] = useState('Sedang');
   const [editingId, setEditingId] = useState(null);
+  const [reminderOn, setReminderOn] = useState(true);
+  const [notifPermission, setNotifPermission] = useState(
+    typeof Notification !== 'undefined' ? Notification.permission : 'unsupported',
+  );
+  const [reminderSent, setReminderSent] = useState(false);
   const titleRef = useRef(null);
 
   // Muat dari localStorage hanya di client, setelah mount — ini yang
   // mencegah hydration mismatch (server tidak pernah me-render data tanggal).
   useEffect(() => {
     setTasksByDate(loadTasks());
+    try {
+      const saved = localStorage.getItem(REMINDER_KEY);
+      if (saved !== null) setReminderOn(saved === '1');
+    } catch {}
+    if (typeof Notification !== 'undefined') {
+      setNotifPermission(Notification.permission);
+    }
     setMounted(true);
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
     }
   }, []);
+
+  // Simpan pengaturan pengingat H-1.
+  useEffect(() => {
+    if (!mounted) return;
+    try {
+      localStorage.setItem(REMINDER_KEY, reminderOn ? '1' : '0');
+    } catch {}
+  }, [reminderOn, mounted]);
+
+  async function requestNotifPermission() {
+    if (typeof Notification === 'undefined') return;
+    try {
+      const result = await Notification.requestPermission();
+      setNotifPermission(result);
+    } catch {}
+  }
+
+  async function fireH1Notification(tasks, dateKey) {
+    const titles = tasks.map((t) => t.title).join(', ');
+    const body =
+      tasks.length === 1
+        ? `Besok ada tugas: ${titles}`
+        : `Besok ada ${tasks.length} tugas: ${titles}`;
+    try {
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.ready;
+        await reg.showNotification('Pengingat H-1 — List Harian', {
+          body,
+          icon: '/icon.svg',
+          badge: '/icon.svg',
+          tag: `h1-${dateKey}`,
+        });
+      } else if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        new Notification('Pengingat H-1 — List Harian', { body });
+      }
+    } catch {}
+    setReminderSent(true);
+  }
 
   // Simpan otomatis setiap kali data berubah (setelah mount).
   useEffect(() => {
@@ -106,6 +159,41 @@ export default function Home() {
   }, [tasksByDate, mounted]);
 
   const todayKey = useMemo(() => toDateKey(new Date()), []);
+  const tomorrowKey = useMemo(() => addDays(todayKey, 1), [todayKey]);
+  const tomorrowTasks = useMemo(
+    () => (tasksByDate[tomorrowKey] || []).filter((t) => !t.done),
+    [tasksByDate, tomorrowKey],
+  );
+
+  // Pengingat H-1: jam 08:00 di hari sebelum tanggal tugas, kirim sekali
+  // per tanggal tugas (dicatat di localStorage supaya tidak berulang).
+  // Notifikasi browser hanya bisa muncul kalau izin diberikan dan aplikasi
+  // pernah dibuka / PWA terpasang — panel "Besok" di bawah selalu tampil
+  // sebagai cadangan saat aplikasi dibuka.
+  useEffect(() => {
+    if (!mounted || !reminderOn) return;
+    function checkH1() {
+      const now = new Date();
+      if (now.getHours() < REMINDER_HOUR) return;
+      if (tomorrowTasks.length === 0) return;
+      if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+      let notified = {};
+      try {
+        notified = JSON.parse(localStorage.getItem(NOTIFIED_KEY) || '{}');
+      } catch {}
+      const key = `${tomorrowKey}:${tomorrowTasks.map((t) => t.id).join(',')}`;
+      if (notified[key]) return;
+      notified[key] = Date.now();
+      try {
+        localStorage.setItem(NOTIFIED_KEY, JSON.stringify(notified));
+      } catch {}
+      fireH1Notification(tomorrowTasks, tomorrowKey);
+    }
+    checkH1();
+    const timer = setInterval(checkH1, 60000);
+    return () => clearInterval(timer);
+  }, [mounted, reminderOn, tomorrowTasks, tomorrowKey]);
+
   const dayTasks = tasksByDate[selectedDate] || [];
   const total = dayTasks.length;
   const doneCount = dayTasks.filter((t) => t.done).length;
@@ -224,6 +312,64 @@ export default function Home() {
         </h1>
         <p className="tagline">Satu hari, satu daftar, semua beres.</p>
       </header>
+
+      <section className="reminder-card" aria-label="Pengingat H-1">
+        <div className="reminder-top">
+          <div>
+            <strong>🔔 Pengingat H-1</strong>
+            <p>
+              Notifikasi 1 hari sebelum jatuh tempo, jam 08:00. Aktifkan izin
+              notifikasi di bawah supaya muncul walau aplikasi tidak dibuka.
+            </p>
+          </div>
+          <button
+            type="button"
+            className={'reminder-toggle' + (reminderOn ? ' on' : '')}
+            onClick={() => setReminderOn((v) => !v)}
+            aria-pressed={reminderOn}
+          >
+            {reminderOn ? 'Aktif' : 'Mati'}
+          </button>
+        </div>
+        {reminderOn && notifPermission !== 'granted' && (
+          <button type="button" className="btn-notif" onClick={requestNotifPermission}>
+            Aktifkan notifikasi browser
+          </button>
+        )}
+        {reminderOn && notifPermission === 'granted' && (
+          <p className="reminder-status">
+            {reminderSent
+              ? '✓ Pengingat H-1 sudah dikirim hari ini.'
+              : '✓ Notifikasi sudah diizinkan. Pengingat H-1 akan muncul jam 08:00.'}
+          </p>
+        )}
+        {reminderOn && notifPermission === 'denied' && (
+          <p className="reminder-status warn">
+            Izin notifikasi ditolak di browser. Buka pengaturan situs untuk
+            mengizinkannya lagi — panel “Besok” di bawah tetap tampil saat
+            aplikasi dibuka.
+          </p>
+        )}
+      </section>
+
+      {reminderOn && tomorrowTasks.length > 0 && (
+        <section className="tomorrow-card" aria-label="Tugas besok">
+          <strong>
+            ⏰ Besok ({formatLong(tomorrowKey)}) ada {tomorrowTasks.length} tugas:
+          </strong>
+          <ul>
+            {tomorrowTasks.map((t) => (
+              <li key={t.id}>
+                {t.time ? `${t.time} — ` : ''}
+                {t.title}
+              </li>
+            ))}
+          </ul>
+          <button type="button" onClick={() => setSelectedDate(tomorrowKey)}>
+            Lihat tugas besok →
+          </button>
+        </section>
+      )}
 
       <div className="date-nav">
         <button type="button" onClick={() => setSelectedDate(addDays(selectedDate, -1))}>
