@@ -350,7 +350,7 @@ export default function Home() {
             aria-haspopup="dialog"
             aria-expanded={infoOpen}
           >
-            ⋮
+            ☰
           </button>
         </header>
         <p className="loading">Memuat tugasmu…</p>
@@ -402,7 +402,7 @@ export default function Home() {
           aria-haspopup="dialog"
           aria-expanded={infoOpen}
         >
-          ⋮
+          ☰
         </button>
       </header>
 

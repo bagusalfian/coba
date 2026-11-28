@@ -83,7 +83,7 @@ button:active {
   font-size: 15px;
 }
 
-/* Tombol titik tiga (⋮) Informasi di kanan atas header */
+/* Tombol garis tiga (☰) Informasi di kanan atas header */
 .info-btn {
   position: absolute;
   top: 0;
