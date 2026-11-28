@@ -1,7 +1,7 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'List Harian Naila Khoirunnisa',
+  title: 'To Do List Harian',
   description: 'Daftar tugas harian — sederhana, cepat, tersimpan di perangkatmu.',
   manifest: '/manifest.webmanifest',
 };

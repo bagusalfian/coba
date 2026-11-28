@@ -16,10 +16,10 @@
       "type": "image/svg+xml"
     }
   ],
-  "name": "List Harian Naila Khoirunnisa",
+  "name": "To Do List Harian",
   "orientation": "portrait",
   "scope": "/",
-  "short_name": "List Naila",
+  "short_name": "List Harian",
   "start_url": "/",
   "theme_color": "#ff6a00"
 }

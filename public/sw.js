@@ -1,4 +1,4 @@
-const CACHE = 'todo-harian-v2';
+const CACHE = 'todo-harian-v3';
 
 // Ketuk notifikasi pengingat H-1 -> buka / fokuskan aplikasi.
 self.addEventListener('notificationclick', (event) => {
