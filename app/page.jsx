@@ -92,7 +92,18 @@ export default function Home() {
   );
   const [reminderSent, setReminderSent] = useState(false);
   const [testResult, setTestResult] = useState('');
+  const [infoOpen, setInfoOpen] = useState(false);
   const titleRef = useRef(null);
+
+  // Tutup popup Informasi dengan tombol Escape.
+  useEffect(() => {
+    if (!infoOpen) return;
+    function onKey(e) {
+      if (e.key === 'Escape') setInfoOpen(false);
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [infoOpen]);
 
   // Muat dari localStorage hanya di client, setelah mount — ini yang
   // mencegah hydration mismatch (server tidak pernah me-render data tanggal).
@@ -331,8 +342,47 @@ export default function Home() {
             To Do List <span>Harian</span>
           </h1>
           <p className="tagline">Satu hari, satu daftar, semua beres.</p>
+          <button
+            type="button"
+            className="info-btn"
+            onClick={() => setInfoOpen(true)}
+            aria-label="Informasi"
+            aria-haspopup="dialog"
+            aria-expanded={infoOpen}
+          >
+            ⋮
+          </button>
         </header>
         <p className="loading">Memuat tugasmu…</p>
+        {infoOpen && (
+          <div className="info-overlay" onClick={() => setInfoOpen(false)}>
+            <div
+              className="info-popup"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Informasi aplikasi"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                className="info-close"
+                onClick={() => setInfoOpen(false)}
+                aria-label="Tutup"
+              >
+                ✕
+              </button>
+              <h2>
+                To Do List <span>Harian</span>
+              </h2>
+              <p>
+                Daftar tugas harian — catat tugas per tanggal dengan jam,
+                prioritas, dan pengingat H-1.
+              </p>
+              <span className="info-version">Versi 1.0</span>
+              <p className="info-credit">Dibuat oleh Nggu You (Bagus Alfiansyah)</p>
+            </div>
+          </div>
+        )}
       </main>
     );
   }
@@ -344,9 +394,19 @@ export default function Home() {
           To Do List <span>Harian</span>
         </h1>
         <p className="tagline">Satu hari, satu daftar, semua beres.</p>
+        <button
+          type="button"
+          className="info-btn"
+          onClick={() => setInfoOpen(true)}
+          aria-label="Informasi"
+          aria-haspopup="dialog"
+          aria-expanded={infoOpen}
+        >
+          ⋮
+        </button>
       </header>
 
-      <section className="reminder-card" aria-label="Pengingat H-1">
+      <section className="reminder-card" style={{ '--d': '70ms' }} aria-label="Pengingat H-1">
         <div className="reminder-top">
           <div>
             <strong>🔔 Pengingat H-1</strong>
@@ -392,7 +452,7 @@ export default function Home() {
       </section>
 
       {reminderOn && tomorrowTasks.length > 0 && (
-        <section className="tomorrow-card" aria-label="Tugas besok">
+        <section className="tomorrow-card" style={{ '--d': '130ms' }} aria-label="Tugas besok">
           <strong>
             ⏰ Besok ({formatLong(tomorrowKey)}) ada {tomorrowTasks.length} tugas:
           </strong>
@@ -410,7 +470,7 @@ export default function Home() {
         </section>
       )}
 
-      <div className="date-nav">
+      <div className="date-nav" style={{ '--d': '190ms' }}>
         <button type="button" onClick={() => setSelectedDate(addDays(selectedDate, -1))}>
           ← Kemarin
         </button>
@@ -426,12 +486,13 @@ export default function Home() {
         </button>
       </div>
 
+      <div key={selectedDate} className="date-fade">
       <p className="current-date">
         <strong>{formatLong(selectedDate)}</strong>
         {selectedDate === todayKey ? ' · Hari ini' : ''}
       </p>
 
-      <div className="week-strip">
+      <div className="week-strip" style={{ '--d': '60ms' }}>
         {weekDays.map((key) => {
           const d = parseDateKey(key);
           return (
@@ -452,7 +513,7 @@ export default function Home() {
         })}
       </div>
 
-      <section className="progress-card" aria-label="Progres hari ini">
+      <section className="progress-card" style={{ '--d': '120ms' }} aria-label="Progres hari ini">
         <div className="progress-top">
           <span className="progress-label">Progres hari ini</span>
           <span className="progress-count">
@@ -466,8 +527,9 @@ export default function Home() {
           <p className="progress-done">Semua tugas beres. Kerja bagus!</p>
         )}
       </section>
+      </div>
 
-      <form className="add-card" onSubmit={handleSubmit}>
+      <form className="add-card" style={{ '--d': '370ms' }} onSubmit={handleSubmit}>
         <h2 className={editingId ? 'editing' : ''}>
           {editingId ? 'Ubah tugas' : 'Tambah tugas baru'}
         </h2>
@@ -529,7 +591,8 @@ export default function Home() {
         )}
       </form>
 
-      <div className="filters">
+      <div key={selectedDate} className="date-fade">
+      <div className="filters" style={{ '--d': '430ms' }}>
         <button
           type="button"
           className={filter === 'all' ? 'active' : ''}
@@ -623,12 +686,43 @@ export default function Home() {
           Hapus {doneCount} tugas yang selesai
         </button>
       )}
+      </div>
 
       <footer className="footer">
         Tugas tersimpan otomatis di perangkat ini (localStorage)
         <br />
         dan tidak hilang saat halaman di-reload.
       </footer>
+
+      {infoOpen && (
+        <div className="info-overlay" onClick={() => setInfoOpen(false)}>
+          <div
+            className="info-popup"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Informasi aplikasi"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="info-close"
+              onClick={() => setInfoOpen(false)}
+              aria-label="Tutup"
+            >
+              ✕
+            </button>
+            <h2>
+              To Do List <span>Harian</span>
+            </h2>
+            <p>
+              Daftar tugas harian — catat tugas per tanggal dengan jam,
+              prioritas, dan pengingat H-1.
+            </p>
+            <span className="info-version">Versi 1.0</span>
+            <p className="info-credit">Dibuat oleh Nggu You (Bagus Alfiansyah)</p>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
